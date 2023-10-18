@@ -1,0 +1,75 @@
+#!/bin/bash
+
+cadena='(("\w+( +\w+)+")|\w+)'
+
+while [ letra="letra" ]
+do
+	echo "Introdueix una opció: "
+	read letra
+	case $letra in
+		'q')
+ 			echo "Sortint de l'aplicació"
+			exit 0
+		;;
+	
+		'lp')
+			cut -d',' -f7,8 cities.csv | uniq
+		;;
+	
+		'sc')
+			codipais="XX"
+			echo "Introdueix país: "
+			read pais
+		
+			if [ -n "$pais" ]; then
+				codipais=$(cut -d',' -f7,8 cities.csv | egrep "$pais" | cut -d',' -f1  | uniq)
+				if [ -z "$codipais" ]; then
+					codipais="XX"
+				fi
+			fi
+			echo $codipais		
+		;;
+		'se')
+			echo "Introdueix estat: "
+			read estat
+			codiestat="XX"
+			if [ -n "$estat" ]; then
+				codiestat=$(egrep "$pais" cities.csv | cut -d',' -f4,5 | egrep "$estat" | cut -d',' -f1 | uniq)
+				if [ -z "$codiestat" ]; then
+					codiestat="XX"
+				fi
+			fi
+			echo $codiestat
+		;;
+		'le')
+			
+			 cut -d',' -f4,5,8 cities.csv | egrep "$pais" | cut -d',' -f1,2 | uniq
+		;;
+		'lcp')
+			cut -d',' -f2,7,11 cities.csv | egrep "$codipais" | cut -d',' -f1,3 | uniq
+		;;
+		'ecp')
+			cut -d',' -f2,8,11 cities.csv | egrep "$pais" | cut -d',' -f1,3 | uniq>"$codipais".csv
+		;;	
+		'lce')
+			cut -d',' -f2,5,8,11 cities.csv | egrep "$pais" | egrep "$estat" | cut -d',' -f1,4 | uniq
+		;;
+		'ece')
+			 cut -d',' -f2,5,8,11 cities.csv | egrep "$pais" | egrep "$estat" | cut -d',' -f1,4 | uniq>"$codipais"_"$codiestat".csv
+		;;
+		'gwd')
+			echo "Introdueix població: "
+			read poblacio
+			if [ -n "$poblacio" ]; then
+				wiki=$(cut -d',' -f2,5,8,11 cities.csv | egrep "$pais" | egrep "$estat" | cut -d',' -f1,4 | egrep ^"$poblacio" | cut -d',' -f2 | uniq) 
+				echo $wiki
+				
+				wget -q https://www.wikidata.org/wiki/Special:EntityData/"$wiki".json 
+			fi
+
+		;;
+		'est')
+			awk -F',' 'BEGIN {Nord=0.0; Sud=0.0; Est=0.0; Oest=0.0; No_ubic=0.0; No_WDId=0.0} { if ( NR > 0 ) { Nord += ( $9 > 0 ) }; { Sud += ( $9 < 0 ) };{ Oest += ( $10 < 0.0 ) }; {Est += ( $10 > 0.0 )}; {No_ubic += ( $9 == 0 ) && ( $10 == 0 ) }; {No_WDId += ( $11 == "" ) }} END {print "Nord: " Nord  " Sud: " Sud " Oest: " Oest " Est: " Est " No ubic: " No_ubic " No WDId: " No_WDId}' cities.csv 
+		;;
+	esac	
+done
